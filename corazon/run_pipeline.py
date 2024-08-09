@@ -168,7 +168,7 @@ def load_def_thresholds():
     """
     thresholds = {'snr' : 1,
               'norm_lpp' : 2.0,
-              'tp_cover' : 0.6,
+              'transit_phase_coverage' : 0.6,
               'oe_sigma' : 3,
               'sweet' : 3}
 
