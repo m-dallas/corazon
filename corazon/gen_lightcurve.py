@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Fri May 29 09:18:01 2020
 
@@ -12,6 +13,7 @@ Generate light curves. Each function is a different way to generate a light curv
 
 
 import lightkurve as lk
+import s3fs
 
 
 def eleanor_pca(ticid, sector, pxsize = 19):
@@ -72,7 +74,28 @@ def hlsp(ticid, sector, author="tess-spoc", local_dir = None):
     
     
     return lc
+
+def from_S3(s3_location):
+    """
     
+
+    Parameters
+    ----------
+    s3_location : string
+        s3 bucket location
+
+    Returns
+    -------
+    lc : lightkurve object
+        lightkurve object of the data requested.
+
+    """
+
+    fs = s3fs.S3FileSystem(anon=True)
+    with fs.open(s3_location, 'rb') as f:
+        lc = lk.io.tess.read_tess_lightcurve(f)
+
+    return lc
 
 def get_hlsp_filename(ticid, sector, author):
     
