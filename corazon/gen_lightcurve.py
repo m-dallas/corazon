@@ -91,9 +91,14 @@ def from_S3(s3_location):
 
     """
 
-    fs = s3fs.S3FileSystem(anon=True)
-    with fs.open(s3_location, 'rb') as f:
-        lc = lk.io.tess.read_tess_lightcurve(f)
+    #fs = s3fs.S3FileSystem(anon=True)
+    #with fs.open(s3_location, 'rb') as f:
+        #lc = lk.io.tess.read_tess_lightcurve(f)
+        #lightcurve_data = f[1].data
+
+    lc = lk.io.read(s3_location, flux_column='psf_flux') # does this correctly mask out bad data?
+
+    #lk.TessQualityFlags.create_quality_mask(np.bitwise_or(lightcurve_data['TESS_flags'], lightcurve_data['TGLC_flags']))
 
     return lc
 
