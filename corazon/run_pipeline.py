@@ -148,6 +148,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
 
     """
     
+    print('running!')
     if run_tag is None:
         now = datetime.now()
         run_tag = now.strftime("crz%m%d%Y") + "_"+lc_author
