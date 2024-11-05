@@ -76,9 +76,7 @@ def run_write_one(ticid, sector, out_dir, lc_author = 'qlp',local_dir = None,
         
         # This will change to genlc.get_lc_from_S3()
         lcdata = genlc.hlsp(ticid, sector, author=lc_author,local_dir = local_dir)
-        
-        print(lcdata)
-        
+
         if lc_author == 'qlp':
             lcdata['quality'] = lcdata['quality'].value & 2237
          
@@ -194,6 +192,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
         # so I changed it:
         lcdata = genlc.from_S3(s3_location)
         
+        print(lcdata)
         
         if lc_author == 'qlp':
             lcdata['quality'] = lcdata['quality'].value & 2237
