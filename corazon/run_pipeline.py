@@ -119,7 +119,7 @@ def run_write_one(ticid, sector, out_dir, lc_author = 'qlp',local_dir = None,
         log_obj.write(str(e))
         log_obj.close() 
 
-def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'qlp',local_dir = None,
+def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC',local_dir = None,
                run_tag = None, config_file = None, plot=False):
     """
     Run the full bls search on a list of ticids stored in a file.
