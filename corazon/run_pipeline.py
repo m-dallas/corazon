@@ -128,6 +128,8 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
     ----------
     ticid : int
        tess input catalog number
+    s3_location : str
+        string of MAST s3 location of TGLC lightcurve
     sector : int
        tess sector to search
     out_dir : string
