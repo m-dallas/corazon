@@ -175,7 +175,7 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
                    colors=col[n], zorder=1, label=str(n+1))
     plt.legend()
     plt.subplot(212)
-    plt.plot(time, flux,'.', label="original lc", color='red')
+    plt.plot(time, flux/np.median(flux),'.', label="normalized original lc", color='red')
     plt.plot(good_time, good_flux,'.', label="detrended lc", color='green')
     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
