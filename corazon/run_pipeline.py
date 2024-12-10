@@ -205,6 +205,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
                                 vetter_list, plot=plot)
 
         # metrics_list is currently not being used!
+        print(metrics_list) # see which ones we want to use
         
         if plot:
             plotfilename = "tic%09i-%s-plot.png" % (ticid, 

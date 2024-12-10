@@ -106,6 +106,9 @@ def vet_all_tces(lc, tce_dict_list, ticid, vetter_list, plot=False):
         metrics['snr'] = tce['snr'] # Potentially could steal this from LEO? Although LEO will give you a nan if it doesn't work well on the given tce
 
         result_string = make_result_string(tce)
+
+        # Could add key:values from metrics to make_result_string() to put vetter results into excel
+
         tce_list.append(tce)
         result_list.append(result_string)
         metrics_list.append(metrics)
@@ -155,7 +158,9 @@ def make_result_string(tce):
                                                tce['depth'].value*1e6,
                                                tce['duration'].value*24.0,
                                                tce['snr'])
-                                               
+
+    # make this also take metrics list and add metrics you want from vetters to st
+
     return st
 
 def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time, 
