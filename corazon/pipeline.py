@@ -52,7 +52,6 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     #                                       sector)
 
     # basic lightkurve based cleaning
-    print("TEST!")
     lcdata = lcdata[~np.isnan(lcdata["flux"])] # remove nans
     lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping
     lcdata = lcdata.flatten() # Savitzky-Golay filter
@@ -175,8 +174,9 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
                    colors=col[n], zorder=1, label=str(n+1))
     plt.legend()
     plt.subplot(212)
-    plt.plot(time, flux,'.', label="original lc")
-    plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
+    plt.plot(time, flux,'.', label="original lc", color='red')
+    plt.plot(good_time, good_flux,'.')
+    #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
     plt.xlim(x_min, x_max)
 
