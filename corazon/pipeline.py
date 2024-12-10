@@ -40,18 +40,27 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     
     """
     
-    time = lcdata['time'].value
-    flux = lcdata['flux'].value
-    flags = lcdata['quality'].value
+    # time = lcdata['time'].value
+    # flux = lcdata['flux'].value
+    # flags = lcdata['quality'].value
 
-    # Take a lightcurve and clean it
-    good_time, meddet_flux = ps.clean_timeseries(time, flux, flags,
-                                          config["det_window"], 
-                                          config["noise_window"], 
-                                          config["n_sigma"], 
-                                          sector)
-        
-    
+    # Take a lightcurve and clean it (This is susan's method, changing it to the basic lightkurve package detrending)
+    # good_time, meddet_flux = ps.clean_timeseries(time, flux, flags,
+    #                                       config["det_window"], 
+    #                                       config["noise_window"], 
+    #                                       config["n_sigma"], 
+    #                                       sector)
+
+    # basic lightkurve based cleaning
+    print("TEST!")
+    lcdata = lcdata[~np.isnan(lcdata["flux"])] # remove nans
+    lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping
+    lcdata = lcdata.flatten() # Savitzky-Golay filter
+
+    good_time = lcdata['time'].value
+    meddet_flux = lcdata['flux'].value # "meddet_flux" might not realllly be the output anymore but I'll pass it to identify Tces etc rather than changing the name everywhere 
+    flags = lcdata['quality'].value # I think we're removing points not just flagging them so might not actually be catching the flags- this is just used in plotting though 
+
     # Run BLS and get TCEs from it using the config dictionary
     tce_list, stats = ps.identifyTces(good_time, meddet_flux, 
                                       bls_durs_hrs=config["bls_durs_hrs"],
