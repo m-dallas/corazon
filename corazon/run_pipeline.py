@@ -157,7 +157,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
     config = {
         "det_window" : 95,  #window used for detrending
         "noise_window" : 19, #window used for running outlier rejection
-        "n_sigma" : 4.5,  #noise/outlier reject sigma
+        "n_sigma" : 3.0,  #noise/outlier reject sigma
         "max_period_days" : 11,
         "min_period_days" : 0.8,
         "bls_durs_hrs" : [1,2,4,6,8,10,12],

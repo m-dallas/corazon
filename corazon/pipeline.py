@@ -7,7 +7,6 @@ import exovetter.tce as TCE
 import astropy.units as u
 import exovetter.const as const
 import lightkurve as lk
-import numpy as np
 from exovetter import vetters
 
 
@@ -53,7 +52,7 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     #                                       sector)
 
     # basic lightkurve based cleaning
-    lcdata = lcdata[~np.isnan(lcdata["flux"])] # remove nans
+    lcdata = lcdata.remove_nans() # remove nans
     lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping
     lcdata = lcdata.flatten() # Savitzky-Golay filter
 
