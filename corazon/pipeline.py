@@ -41,8 +41,8 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     
     """
     
-    # time = lcdata['time'].value
-    # flux = lcdata['flux'].value
+    time = lcdata['time'].value
+    flux = lcdata['flux'].value
     # flags = lcdata['quality'].value
 
     # Take a lightcurve and clean it (This is susan's method, changing it to the basic lightkurve package detrending)
@@ -176,7 +176,7 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
     plt.legend()
     plt.subplot(212)
     plt.plot(time, flux,'.', label="original lc", color='red')
-    plt.plot(good_time, good_flux,'.')
+    plt.plot(good_time, good_flux,'.', label="detrended lc", color='green')
     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
     plt.xlim(x_min, x_max)
