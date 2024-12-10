@@ -7,7 +7,7 @@ import exovetter.tce as TCE
 import astropy.units as u
 import exovetter.const as const
 import lightkurve as lk
-import numpy
+import numpy as np
 from exovetter import vetters
 
 
