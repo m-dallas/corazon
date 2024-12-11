@@ -318,7 +318,7 @@ def run_one_froms3_coiled(ticid, s3_location, sector, write_config,
         run_tag = write_config['run_tag']    
 
     
-    if plot and (fs[1:2] != "Lo"):
+    if plot:
         matplotlib.use('Agg')
     
     # Default BLS parameters
