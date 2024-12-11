@@ -8,7 +8,7 @@ import s3fs
 import json
 from fsspec.implementations.local import LocalFileSystem
 from astropy.utils.misc import JsonCustomEncoder
-#sys.path[2] = '/Users/smullally/Python_Code/lightkurve/lightkurve'
+import matplotlib
 
 
 def run_write_one(ticid, sector, out_dir, lc_author = 'qlp',local_dir = None,
@@ -277,3 +277,134 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
         # log_obj.write("Failed to create TCEs for TIC %i for Sector %i \n" % (ticid, sector))
         # log_obj.write(str(e))
         # log_obj.close() 
+
+def run_one_froms3_coiled(ticid, s3_location, sector, write_config,  
+                config = None, plot=False, vetter_list=None):
+    """
+    Run the full bls search on a list of ticids stored in a file.
+    Read from s3 and store output files in s3.  write_config contains the info.
+
+    Parameters
+    ----------
+    ticid : int
+       tess input catalog number
+    s3_location : str
+        string of MAST s3 location of TGLC lightcurve
+    sector : int
+       tess sector to search
+    write_config : dictionary
+        A dictionary containing 'fs', A fsspec filesystem. Either s3fs.S3FileSystem 
+         or a LocalFileSystem, and 'outdir' for either the 
+         directory location or the s3 bucket name, and 'run_tag' a string to put in the filename
+         set to None to get the current day and lc_author as a string for keeping track
+    config : dictionary
+        A dictionary to describe how to detrend and run the BLS
+    vetter_list: list
+        List of vetters from exovetter, e.g. [vetters.LeoTransitEvents()]
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    if run_tag is None:
+        now = datetime.now()
+        run_tag = now.strftime("crz%m%d%Y") + "_" + lc_author
+    
+    if plot and (fs[1:2] != "Lo"):
+        matplotlib.use('Agg')
+    
+    # Default BLS parameters
+    config = {
+        "det_window" : 95,  #window used for detrending
+        "noise_window" : 19, #window used for running outlier rejection
+        "n_sigma" : 3.0,  #noise/outlier reject sigma
+        "max_period_days" : 11,
+        "min_period_days" : 0.8,
+        "bls_durs_hrs" : [1,2,4,6,8,10,12],
+        "minSnr" : [1],
+        "maxTces" : 20,
+        "fracRemain" : 0.7
+        }
+    
+    # load exovetter vetters to get some statistics on the generated tces
+    vetter_list = [vetters.LeoTransitEvents(), vetters.Sweet(), 
+                   vetters.TransitPhaseCoverage()]
+
+    # Set up where the output goes
+    fs = write_config['fs']
+    lc_author = write_config['lc_author']
+    out_dir = write_config['outdir']
+    if write_config['run_tag'] is None:
+        now = datetime.now()
+        run_tag = now.strftime("crz%m%d%Y")
+    else:
+        run_tag = write_config['run_tag']
+
+    # Set up where the output goes
+    target_dir = "/tic%09is%02i/" % (int(ticid), sector)
+    log_name = out_dir + target_dir + "tic%09i-%s.log" % (ticid, run_tag)
+    output_file = out_dir + target_dir + "tic%09i-%s-tcesum.csv" % (ticid, run_tag)
+    
+    try:
+        
+        lcdata = genlc.from_S3(s3_location)
+        
+        if lc_author == 'qlp':
+            lcdata['quality'] = lcdata['quality'].value & 2237
+         
+        tce_list, result_strings, metrics_list = pipeline.search_and_vet_one(ticid, 
+                                sector, lcdata, config, 
+                                vetter_list, plot=plot)
+        
+        if plot:
+        
+            plotfilename = "tic%09i-%s-plot.png" % (ticid, 
+                                                    run_tag)
+            with fs.open("s3://" + out_dir + target_dir + plotfilename) as fp:
+                plt.savefig(fp, bbox_inches='tight')
+        
+        # new way to save csv with vetters
+        with fs.open(output_file, 'w') as fp: 
+            for i,r in enumerate(result_strings):
+                newstr = ", %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f " % (metrics_list[i]['MES'],
+                                           metrics_list[i]['SHP'],
+                                           metrics_list[i]['CHI'],
+                                           metrics_list[i]['med_chases'],
+                                           metrics_list[i]['mean_chases'],
+                                           metrics_list[i]['mean_chases'],
+                                           metrics_list[i]['max_SES'],
+                                           metrics_list[i]['DMM'],
+                                           metrics_list[i]['amp'][2][0], # last array in Sweet (amplitude to uncertainty ratio): half-period
+                                           metrics_list[i]['amp'][2][1], # period
+                                           metrics_list[i]['amp'][2][2], # twice the period
+                                           metrics_list[i]['transit_phase_coverage'],
+                                           metrics_list[i]['snr'])
+                newr = r[:-1] + newstr
+                fp.write(newr)
+    
+        
+        #Write TCEs
+        for tce in tce_list:
+            tcefilename = "tic%09i-%02i-%s.json" % (ticid, 
+                                                    int(tce['event']), 
+                                                    run_tag)
+    
+            full_filename = out_dir + target_dir + tcefilename
+            tce['lc_author'] = lc_author
+            with fs.open(full_filename, 'w') as fp:
+                json.dump(tce, fp, cls=JsonCustomEncoder)
+
+        with fs.open(log_name, 'w') as fp:
+            fp.write("Success!")
+
+        return tce_list
+
+    except Exception as e:
+        with fs.open(log_name,'w') as fp:
+            fp.write("Failed to create TCEs for TIC %i for Sector %i \n" % (ticid, sector))
+            fp.write(str(e))
+            return ["failed", output_file, str(e)]
+
+    
