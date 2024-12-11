@@ -307,10 +307,16 @@ def run_one_froms3_coiled(ticid, s3_location, sector, write_config,
     None.
 
     """
-    
-    if run_tag is None:
+  # Set up where the output goes by reading in the 
+    fs = write_config['fs']
+    lc_author = write_config['lc_author']
+    out_dir = write_config['outdir']
+    if write_config['run_tag'] is None:
         now = datetime.now()
-        run_tag = now.strftime("crz%m%d%Y") + "_" + lc_author
+        run_tag = now.strftime("crz%m%d%Y")
+    else:
+        run_tag = write_config['run_tag']    
+
     
     if plot and (fs[1:2] != "Lo"):
         matplotlib.use('Agg')
@@ -332,15 +338,7 @@ def run_one_froms3_coiled(ticid, s3_location, sector, write_config,
     vetter_list = [vetters.LeoTransitEvents(), vetters.Sweet(), 
                    vetters.TransitPhaseCoverage()]
 
-    # Set up where the output goes
-    fs = write_config['fs']
-    lc_author = write_config['lc_author']
-    out_dir = write_config['outdir']
-    if write_config['run_tag'] is None:
-        now = datetime.now()
-        run_tag = now.strftime("crz%m%d%Y")
-    else:
-        run_tag = write_config['run_tag']
+  
 
     # Set up where the output goes
     target_dir = "/tic%09is%02i/" % (int(ticid), sector)
