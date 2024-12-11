@@ -54,7 +54,7 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
 
     # basic lightkurve based cleaning
     lcdata = lcdata.remove_nans() # remove nans
-    lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping
+    lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping- seems to work well with 3.0 so I set that in the "run_write_one_from_s3()" config dictionary 
     lcdata = lcdata.flatten() # Savitzky-Golay filter
 
     good_time = lcdata['time'].value
@@ -75,7 +75,7 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
                     meddet_flux, stats, sector)
     
     lcformat = lcdata['time'].format
-    tce_lc = lk.LightCurve(time=good_time, flux=meddet_flux+1,
+    tce_lc = lk.LightCurve(time=good_time, flux=meddet_flux,
                         time_format=lcformat, meta={'sector':sector})
     
     result_strings, metrics_list, tce_tces = vet_all_tces(tce_lc, 
@@ -108,6 +108,7 @@ def vet_all_tces(lc, tce_dict_list, ticid, vetter_list, plot=False):
         result_string = make_result_string(tce)
 
         # Could add key:values from metrics to make_result_string() to put vetter results into excel
+        
 
         tce_list.append(tce)
         result_list.append(result_string)
