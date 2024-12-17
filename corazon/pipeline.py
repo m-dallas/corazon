@@ -43,23 +43,20 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     
     time = lcdata['time'].value
     flux = lcdata['flux'].value
-    # flags = lcdata['quality'].value
+    flags = lcdata['quality'].value
 
-    # Take a lightcurve and clean it (This is susan's method, changing it to the basic lightkurve package detrending)
-    # good_time, meddet_flux = ps.clean_timeseries(time, flux, flags,
-    #                                       config["det_window"], 
-    #                                       config["noise_window"], 
-    #                                       config["n_sigma"], 
-    #                                       sector)
+    # Take a lightcurve and clean it 
+    good_time, meddet_flux = ps.clean_timeseries(time, flux, flags,
+                                                config["det_window"], 
+                                                config["noise_window"], 
+                                                config["n_sigma"], 
+                                                sector)
 
-    # basic lightkurve based cleaning
-    lcdata = lcdata.remove_nans() # remove nans
-    lcdata = lcdata.remove_outliers(sigma=config["n_sigma"]) # sigma clipping- seems to work well with 3.0 so I set that in the "run_write_one_from_s3()" config dictionary 
+    lcdata = lk.LightCurve(time=good_time, flux=meddet_flux) # pack into lightkurve object to use the handy scipy wrapper in lightkurve package
     lcdata = lcdata.flatten() # Savitzky-Golay filter
 
     good_time = lcdata['time'].value
-    meddet_flux = lcdata['flux'].value # "meddet_flux" might not realllly be the output anymore but I'll pass it to identify Tces etc rather than changing the name everywhere 
-    flags = lcdata['quality'].value # I think we're removing points not just flagging them so might not actually be catching the flags- this is just used in plotting though 
+    meddet_flux = lcdata['flux'].value # now is Susan's clean_timeseries detrending and the default lightkurve flattening
 
     # Run BLS and get TCEs from it using the config dictionary
     tce_list, stats = ps.identifyTces(good_time, meddet_flux, 
@@ -181,8 +178,9 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
                    colors=col[n], zorder=1, label=str(n+1))
     plt.legend()
     plt.subplot(212)
-    plt.plot(time, flux/np.median(flux),'.', label="normalized original lc", color='red')
-    plt.plot(good_time, good_flux,'.', label="detrended lc", color='green')
+    plt.plot(time, flux/np.median(flux),'.', ms=1, label="normalized original lc", color='red', alpha=0.75)
+    plt.plot(good_time, good_flux,'.', ms=1, label="detrended lc", color='green', alpha=0.75)
+    plt.set_ylim([np.median(good_flux)-(3*np.std(good_flux)), np.median(good_flux)+(3*np.std(good_flux))]) # limit y range for readability
     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
     plt.xlim(x_min, x_max)
