@@ -180,7 +180,7 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
     plt.subplot(212)
     plt.plot(time, flux/np.median(flux),'.', ms=1, label="normalized original lc", color='red', alpha=0.75)
     plt.plot(good_time, good_flux,'.', ms=1, label="detrended lc", color='green', alpha=0.75)
-    plt.set_ylim([np.median(good_flux)-(3*np.std(good_flux)), np.median(good_flux)+(3*np.std(good_flux))]) # limit y range for readability
+    plt.ylim([np.median(good_flux)-(3*np.std(good_flux)), np.median(good_flux)+(3*np.std(good_flux))]) # limit y range for readability
     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
     plt.xlim(x_min, x_max)
