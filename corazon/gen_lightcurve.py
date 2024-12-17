@@ -14,6 +14,7 @@ Generate light curves. Each function is a different way to generate a light curv
 
 import lightkurve as lk
 import s3fs
+import numpy as np
 
 
 def eleanor_pca(ticid, sector, pxsize = 19):
@@ -97,7 +98,13 @@ def from_S3(s3_location):
         #lightcurve_data = f[1].data
     #print(f'running on {s3_location}')
 
-    lc = lk.io.read(s3_location, flux_column='psf_flux') # does this correctly mask out bad data?
+    lc = lk.io.read(s3_location, flux_column='psf_flux') 
+    
+    idx = ~np.isnan(lc['psf_flux'])
+    if len(lc['psf_flux'][idx]) == 0:
+        lc = lk.io.read(s3_location, flux_column='aperture_flux') 
+
+
     #print(lc)
 
     # 

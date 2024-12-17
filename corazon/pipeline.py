@@ -2,6 +2,7 @@ __all__ = ['search_and_vet_one', 'vet_tce','vet_all_tces','get_disposition']
 
 import corazon.planetSearch as ps
 import corazon.gen_lightcurve as genlc
+from astropy.time import Time
 import matplotlib.pyplot as plt
 import exovetter.tce as TCE
 import astropy.units as u
@@ -45,18 +46,35 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
     flux = lcdata['flux'].value
     flags = lcdata['quality'].value
 
+    print("input flux")
+    print(flux)
+
     # Take a lightcurve and clean it 
     good_time, meddet_flux = ps.clean_timeseries(time, flux, flags,
                                                 config["det_window"], 
                                                 config["noise_window"], 
                                                 config["n_sigma"], 
                                                 sector)
+    
+    # print()
+    # print("susan's cleaned flux:")
+    # print(meddet_flux)
+    
+    # pack into lightkurve object to use the handy flatten function in lightkurve package (make sure to normalize to 1 instead of 0)
+    lcdata = lk.LightCurve(time=Time(good_time, format="btjd", scale="tdb"), flux=meddet_flux+1) 
+    
+    # print()
+    # print("lightkurve's output flux before flattening:")
+    # print(lcdata['flux'])
 
-    lcdata = lk.LightCurve(time=good_time, flux=meddet_flux) # pack into lightkurve object to use the handy scipy wrapper in lightkurve package
     lcdata = lcdata.flatten() # Savitzky-Golay filter
 
     good_time = lcdata['time'].value
-    meddet_flux = lcdata['flux'].value # now is Susan's clean_timeseries detrending and the default lightkurve flattening
+    meddet_flux = lcdata['flux'].value-1 # Output was originally normalized to 0 
+
+    # print()
+    # print("lightkurve's output flux after flattening:")
+    # print(meddet_flux)
 
     # Run BLS and get TCEs from it using the config dictionary
     tce_list, stats = ps.identifyTces(good_time, meddet_flux, 
@@ -167,7 +185,10 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
                'gold','magenta','lightpink']
     plt.figure(figsize=(10,6))
     plt.subplot(211)
-    plt.plot(good_time, good_flux,'.')
+    plt.plot(good_time, good_flux, label='BLS searched lc')
+    plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
+    #plt.ylim([-0.05, 0.05])
+    #plt.xlim([1695, 1701])
     plt.title("Lightcurve for TIC %i in S%i" % (int(ticid), int(sector)))
    
     axes = plt.gca()
@@ -178,9 +199,11 @@ def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time,
                    colors=col[n], zorder=1, label=str(n+1))
     plt.legend()
     plt.subplot(212)
-    plt.plot(time, flux/np.median(flux),'.', ms=1, label="normalized original lc", color='red', alpha=0.75)
-    plt.plot(good_time, good_flux,'.', ms=1, label="detrended lc", color='green', alpha=0.75)
-    plt.ylim([np.median(good_flux)-(3*np.std(good_flux)), np.median(good_flux)+(3*np.std(good_flux))]) # limit y range for readability
+    plt.plot(time, (flux/np.median(flux))-1, label="normalized original lc", color='tab:red', alpha=0.75)
+    plt.plot(good_time, good_flux, label="detrended lc", color='tab:blue', alpha=0.75)
+    plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
+    #plt.ylim([-0.05, 0.05])
+    #plt.xlim([1695, 1701])
     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     plt.legend()
     plt.xlim(x_min, x_max)

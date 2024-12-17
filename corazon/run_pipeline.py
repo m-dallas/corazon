@@ -164,14 +164,40 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
     else:
         fs = LocalFileSystem()
     
-    # Default BLS parameters
+    # Some BLS parameters and cleaning params I chose:
+    # config = {
+    #     "det_window" : 95,  #window used for detrending
+    #     "noise_window" : 19, #window used for running outlier rejection
+    #     "n_sigma" : 3.0,  #noise/outlier reject sigma
+    #     "max_period_days" : 11,
+    #     "min_period_days" : 0.8,
+    #     "bls_durs_hrs" : [1,2,4,6,8,10,12],
+    #     "minSnr" : [1],
+    #     "maxTces" : 20,
+    #     "fracRemain" : 0.7
+    #     }
+
+    # The config Susan originally had in pipeline.py
+    # config = {
+    #     "det_window" : 65,
+    #     "noise_window" : 27,
+    #     "n_sigma" : 4.5,  #noise reject sigma
+    #     "max_period_days" : 10,
+    #     "min_period_days" : 0.8,
+    #     "bls_durs_hrs" : [1,2,4,8,12],
+    #     "minSnr" : [1],
+    #     "maxTces" : 20,
+    #     "fracRemain" : 0.7
+    #     }
+    
+    # The config susan had in run_pipeline.py (would have been called if no config dictionary specified)
     config = {
         "det_window" : 95,  #window used for detrending
         "noise_window" : 19, #window used for running outlier rejection
-        "n_sigma" : 3.0,  #noise/outlier reject sigma
+        "n_sigma" : 4.5,  #noise/outlier reject sigma
         "max_period_days" : 11,
         "min_period_days" : 0.8,
-        "bls_durs_hrs" : [1,2,4,6,8,10,12],
+        "bls_durs_hrs" : [1,2,4,8,12,14],
         "minSnr" : [1],
         "maxTces" : 20,
         "fracRemain" : 0.7
@@ -206,6 +232,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
         # so I changed it:
         lcdata = genlc.from_S3(s3_location)
         
+        #print(lcdata.meta)
         #print(lcdata)
         
         if lc_author == 'qlp':
@@ -233,7 +260,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
         # new way to save csv with vetters
         with fs.open(output_file, 'w') as fp: 
             for i,r in enumerate(result_strings):
-                newstr = ", %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f " % (metrics_list[i]['MES'],
+                newstr = ", %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (metrics_list[i]['MES'],
                                            metrics_list[i]['SHP'],
                                            metrics_list[i]['CHI'],
                                            metrics_list[i]['med_chases'],
@@ -366,7 +393,7 @@ def run_one_froms3_coiled(ticid, s3_location, sector, write_config,
         # new way to save csv with vetters
         with fs.open(output_file, 'w') as fp: 
             for i,r in enumerate(result_strings):
-                newstr = ", %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f " % (metrics_list[i]['MES'],
+                newstr = ", %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (metrics_list[i]['MES'],
                                            metrics_list[i]['SHP'],
                                            metrics_list[i]['CHI'],
                                            metrics_list[i]['med_chases'],
