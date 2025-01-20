@@ -242,12 +242,17 @@ def plot_lc_tce(ticid, time, flux, flags, stats, sector):
     
     plt.plot(time, flux, label='BLS searched lc')
     plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
+
+    axes = plt.gca()
+    y_min, y_max = axes.get_ylim()
+    x_min, x_max = axes.get_xlim()
+
     for n,s in enumerate(stats):
         plt.vlines(stats[n]['transit_times'], y_min, y_max, colors=col[n], zorder=1, label=str(n+1))
 
     plt.legend()
     plt.title("Lightcurve for TIC %i in S%i" % (int(ticid), int(sector)))
-    
+    plt.xlim(x_min, x_max)
 
 # def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time, 
 #                 good_flux, stats, sector):
