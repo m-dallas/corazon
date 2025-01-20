@@ -238,7 +238,7 @@ def run_write_one_from_s3(ticid, s3_location, sector, out_dir, lc_author = 'TGLC
         if lc_author == 'qlp':
             lcdata['quality'] = lcdata['quality'].value & 2237
          
-        tce_list, result_strings, metrics_list = pipeline.search_and_vet_one(ticid, 
+        tce_list, result_strings, metrics_list = pipeline.search_and_vet_one_TGLC(ticid, 
                                 sector, lcdata, config, 
                                 vetter_list, plot=plot)
 

@@ -99,6 +99,63 @@ def search_and_vet_one(ticid, sector, lcdata, config, vetter_list, plot=True):
                                                     plot=False)
     
     return tce_tces, result_strings, metrics_list
+
+def search_and_vet_one_TGLC(ticid, sector, lcdata, config, vetter_list, plot=True):
+    """
+    Search and vet one ticid using config and vetter list for the pre-cleaned TGLC files
+    
+    Parameters
+    ----------
+    ticid : int
+         TIC Identification number
+    sector : int
+        Sector of the TESS data to use for analysis
+    lcdata : lightkkurve obect
+        time and flux and quality flags populated
+    config : dict
+        configuration dictionary
+    vetter_list : list
+        list of vetters from exovetter to run
+
+    Returns
+    -------
+    tce_tces : list
+        list of exovetter TCEs for this target
+    result_strings : str
+       string version of tce and decision
+      
+    metrics_list : list
+        all metrics, one per tce
+
+    
+    """
+    
+    time = lcdata['time'].value
+    flux = lcdata['flux'].value
+    flags = lcdata['quality'].value
+
+    # Run BLS and get TCEs from it using the config dictionary
+    tce_list, stats = ps.identifyTces(time, flux, 
+                                      bls_durs_hrs=config["bls_durs_hrs"],
+                                      minSnr=config["minSnr"], 
+                                      fracRemain=config["fracRemain"], 
+                                      maxTces=config["maxTces"], 
+                                      minP=config["min_period_days"], 
+                                      maxP=config["max_period_days"])
+    
+    if plot:
+        plot_lc_tce(ticid, time, flux, flags, stats, sector)
+    
+    lcformat = lcdata['time'].format
+    tce_lc = lk.LightCurve(time=time, flux=flux,
+                        time_format=lcformat, meta={'sector':sector})
+    
+    result_strings, metrics_list, tce_tces = vet_all_tces(tce_lc, 
+                                                    tce_list, ticid, 
+                                                    vetter_list,
+                                                    plot=False)
+    
+    return tce_tces, result_strings, metrics_list
     
 def vet_all_tces(lc, tce_dict_list, ticid, vetter_list, plot=False):
     lcformat = lc['time'].format
@@ -179,34 +236,47 @@ def make_result_string(tce):
 
     return st
 
-def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time, 
-                good_flux, stats, sector):
-    col = ['tab:orange','tab:green','tab:purple','tab:brown',
-               'gold','magenta','lightpink']
+def plot_lc_tce(ticid, time, flux, stats, sector):
+    col = ['tab:orange','tab:green','tab:purple','tab:brown', 'gold','magenta','lightpink']
     plt.figure(figsize=(10,6))
-    plt.subplot(211)
-    plt.plot(good_time, good_flux, label='BLS searched lc')
-    plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
-    #plt.ylim([-0.05, 0.05])
-    #plt.xlim([1695, 1701])
-    plt.title("Lightcurve for TIC %i in S%i" % (int(ticid), int(sector)))
-   
-    axes = plt.gca()
-    y_min, y_max = axes.get_ylim()
-    x_min, x_max = axes.get_xlim()
+    
+    plt.plot(time, flux, label='BLS searched lc')
+    plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
     for n,s in enumerate(stats):
-        plt.vlines(stats[n]['transit_times'], y_min, y_max, 
-                   colors=col[n], zorder=1, label=str(n+1))
+        plt.vlines(stats[n]['transit_times'], y_min, y_max, colors=col[n], zorder=1, label=str(n+1))
+
     plt.legend()
-    plt.subplot(212)
-    plt.plot(time, (flux/np.median(flux))-1, label="normalized original lc", color='tab:red', alpha=0.75)
-    plt.plot(good_time, good_flux, label="detrended lc", color='tab:blue', alpha=0.75)
-    plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
-    #plt.ylim([-0.05, 0.05])
-    #plt.xlim([1695, 1701])
-    #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
-    plt.legend()
-    plt.xlim(x_min, x_max)
+    plt.title("Lightcurve for TIC %i in S%i" % (int(ticid), int(sector)))
+    
+
+# def plot_lc_tce(ticid, tce_list, time, flux, flags, good_time, 
+#                 good_flux, stats, sector):
+#     col = ['tab:orange','tab:green','tab:purple','tab:brown',
+#                'gold','magenta','lightpink']
+#     plt.figure(figsize=(10,6))
+#     plt.subplot(211)
+#     plt.plot(good_time, good_flux, label='BLS searched lc')
+#     plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
+#     #plt.ylim([-0.05, 0.05])
+#     #plt.xlim([1695, 1701])
+#     plt.title("Lightcurve for TIC %i in S%i" % (int(ticid), int(sector)))
+   
+#     axes = plt.gca()
+#     y_min, y_max = axes.get_ylim()
+#     x_min, x_max = axes.get_xlim()
+#     for n,s in enumerate(stats):
+#         plt.vlines(stats[n]['transit_times'], y_min, y_max, 
+#                    colors=col[n], zorder=1, label=str(n+1))
+#     plt.legend()
+#     plt.subplot(212)
+#     plt.plot(time, (flux/np.median(flux))-1, label="normalized original lc", color='tab:red', alpha=0.75)
+#     plt.plot(good_time, good_flux, label="detrended lc", color='tab:blue', alpha=0.75)
+#     plt.ylim([np.median((flux/np.median(flux))-1)-(4*np.std((flux/np.median(flux))-1)), np.median((flux/np.median(flux))-1)+(4*np.std((flux/np.median(flux))-1))]) # limit y range for readability
+#     #plt.ylim([-0.05, 0.05])
+#     #plt.xlim([1695, 1701])
+#     #plt.plot(time[flags!=0], flux[flags!=0],'o', ms=3, label='flagged')
+#     plt.legend()
+#     plt.xlim(x_min, x_max)
 
 def open_output_file(filename, headerlist):
     fobj = open(filename, 'a')
