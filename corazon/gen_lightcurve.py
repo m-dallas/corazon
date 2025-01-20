@@ -98,11 +98,12 @@ def from_S3(s3_location):
         #lightcurve_data = f[1].data
     #print(f'running on {s3_location}')
 
-    lc = lk.io.read(s3_location, flux_column='psf_flux') 
+    #lc = lk.io.read(s3_location, flux_column='psf_flux') 
+    lc = lk.io.tglc.read_tglc_lightcurve(s3_location)
     
-    idx = ~np.isnan(lc['psf_flux'])
-    if len(lc['psf_flux'][idx]) == 0:
-        lc = lk.io.read(s3_location, flux_column='aperture_flux') 
+    idx = ~np.isnan(lc['flux'])
+    if len(lc['flux'][idx]) == 0:
+        lc = lk.io.tglc.read_tglc_lightcurve(s3_location, flux_column='CAL_APER_FLUX') # if CAL_PSF_FLUX is blank use the aperture flux
 
 
     #print(lc)
