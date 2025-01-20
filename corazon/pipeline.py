@@ -236,7 +236,7 @@ def make_result_string(tce):
 
     return st
 
-def plot_lc_tce(ticid, time, flux, stats, sector):
+def plot_lc_tce(ticid, time, flux, flags, stats, sector):
     col = ['tab:orange','tab:green','tab:purple','tab:brown', 'gold','magenta','lightpink']
     plt.figure(figsize=(10,6))
     
